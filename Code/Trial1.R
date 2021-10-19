@@ -130,3 +130,4 @@ print(result)
                      NR_VS2_test = sqrt(mean(MSE_NRVS2_test)), MSE_NRVS2_train = sqrt(mean(MSE_NRVS2_train))))
 
 print(result_rmse)
+

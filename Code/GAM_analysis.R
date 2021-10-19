@@ -87,20 +87,92 @@ plot(fit_sm05,select = 3, shade = TRUE, scale = 0, seWithMean = TRUE)
 
 cor(cbind(BodyFat$AGE,BodyFat$WEIGHT,BodyFat$FOREARM,BodyFat$THIGH,BodyFat$ABDOMEN))
 
+## Check adj R2 degree of freedom 
+gamR2 <- function(gam){
+  R2 <- 1-((sum(residuals(gam)^2))/
+             (sum((gam$y - mean(gam$y))^2)))
+  R2adj <- 1- ((1 - R2) * (length(gam$y) - 1)/ # Total df = n-1
+                 (fit_sm05$df.residual)) # Residuals df = df.residual = trace(S)
+  a <- data.frame(R2, R2adj)
+  return(a)
+}
+
+gamR2(fit_sm05)
+
 # Prediction ---------------------------------------
-new_x = data.frame(data.frame(AGE = 22, WEIGHT = 154,
+new_x = data.frame(AGE = 23, WEIGHT = 154,
                               ABDOMEN= 85.2, THIGH = 59,
-                              FOREARM = 27.4, WRIST = 17.1))
+                              FOREARM = 27.4, WRIST = 17.1)
 
 fit = predict(fit_sm05, newdata = new_x, se = TRUE)
-print(fit)
+# print(fit)
 
-upr = fit$fit + 1.96*fit$se.fit
-dwn = fit$fit - 1.96*fit$se.fit
+## CI
+
+
+upr = fit$fit + 2*fit$se.fit
+dwn = fit$fit - 2*fit$se.fit
+
 
 print(data.frame(fit = fit$fit, upr = upr, dwn = dwn))
 
 
+## devtools::install_github("gavinsimpson/schoenberg")
+# library("schoenberg")
+# ci = confint(fit_sm05, parm ="ABDOMEN",type = 'confidence')
+
+# predict(fit_sm05, newdata = data.frame(AGE = mean(BodyFat$AGE), WEIGHT = mean(BodyFat$WEIGHT),
+#                                     ABDOMEN= 100.123, THIGH = mean(BodyFat$THIGH),
+#                                     FOREARM = mean(BodyFat$FOREARM), WRIST = mean(BodyFat$FOREARM)), se=TRUE)
+# library(gratia)
+# fd = fderiv(fit_sm05)
+# ci <- confint(fd, type = "confidence")
+# ci <- cbind(ci, x = as.vector(fd[['eval']]))
+# library("ggplot2")
+# ggplot(ci, aes(x = x, y = est, group = term)) +
+#   geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.3) +
+#   geom_line() +
+#   facet_wrap( ~ term)
+
+## PI
+
+# fit_gam = fit_sm05
+# beta = coef(fit_gam)
+# V = vcov(fit_gam)
+# 
+# num_beta_vecs <- 1000
+# Cv <- chol(V)
+# 
+# nus <- rnorm(num_beta_vecs * length(beta))
+# beta_sims <- beta + t(Cv) %*% matrix(nus, nrow = length(beta), ncol = num_beta_vecs)
+# dim(beta_sims)
+# 
+# d_beta <- cbind(summary(fit_gam)$se, apply(beta_sims, 1, sd))
+# 
+# n_obs <- 100
+# sim_idx <- sample.int(nrow(BodyFat), size = n_obs, replace = TRUE)
+# sim_dat <- BodyFat[sim_idx, c("AGE", "WEIGHT", "FOREARM", "ABDOMEN", "THIGH", "WRIST")]
+# dim(sim_dat)
+# 
+# covar_sim <- predict(fit_gam, newdata = sim_dat, type = "lpmatrix")
+# linpred_sim <- covar_sim %*% beta_sims
+# ## Link function: here we are identity function.
+# invlink <- function(x) x
+# exp_val_sim <- invlink(linpred_sim)
+# 
+# y_sim <- matrix(rnorm(n = prod(dim(exp_val_sim)), 
+#                       mean = exp_val_sim, 
+#                       sd = summary(fit_gam)$scale), 
+#                 nrow = nrow(exp_val_sim), 
+#                 ncol = ncol(exp_val_sim))
+# dim(y_sim)
+# pred_int_sim <- apply(y_sim, 1, quantile, prob = c(.05, 0.95))
+# dim(pred_int_sim)
+# 
+# pred_int_sim
+
+
+## Quantile for BodyFat
 fit_all = predict(fit_sm05, se = TRUE)
 quantile(fit_all$fit, probs = c(0,0.25,.5,.75,1))
 quantile(BodyFat$BODYFAT, probs = c(0,0.25,.5,.75,1))
