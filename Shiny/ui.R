@@ -1,9 +1,8 @@
 library(shiny)
 library(shinythemes)
 
-runExample("02_text")
 
-ui <- fluidPage{
+ui <- fluidPage(
   titlePanel("BodyFat Mearsurement for Men"),
   
   # Whole Layout
@@ -11,27 +10,36 @@ ui <- fluidPage{
     
     sidebarPanel(
       
-      numericInput(inputId = "AGE",
-                   label = "years"),
+      sliderInput(inputId = "AGE",
+                   label = "AGE(years)", min = 0,max = 100, step = 1,value = 25),
       
-      numericInput(inputId = "Circumference of ABDOMEN",
-                   label = "cm"),
+      textInput(inputId = "ABDOMEN",
+                   label = "Circumference of ABDOMEN(cm)"),
       
-      numericInput(inputId = "WEIGHT",
-                   label = "pounds"),
+      textInput(inputId = "WEIGHT",
+                   label = "WEIGHT(lbs)"),
       
-      numericInput(inputId = "Circumference of WRIST",
-                   label = "cm"),
+      textInput(inputId = "WRIST",
+                   label = "Circumference of WRIST(cm)*"),
       
-      numericInput(inputId = "Circumference of FOREARM",
-                   label = "cm"),
+      textInput(inputId = "FOREARM",
+                   label = "Circumference of FOREARM(cm)*"),
       
-      numericInput(inputId = "Circumference of THIGH",
-                   label = "cm"),
+      textInput(inputId = "THIGH",
+                   label = "Circumference of THIGH(cm)*"),
+      
+      helpText('* represents not necessary information.'),
+      
+      actionButton(inputId = "Predict", label = "Calculate your BodyFat"
+                   ,class = "btn-success")
+    ),
+    
+    mainPanel(
+      textOutput(outputId = "Prediction")
     )
     
   )
-}
+)
 
 server <- function(input, output){
   
