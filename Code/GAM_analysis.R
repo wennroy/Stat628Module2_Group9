@@ -72,9 +72,11 @@ gam.check(fit_sm05, rep = 500)
 qq.gam(fit_sm05, rep = 500, level = .95)
 
 library(gratia)
+library(gridExtra)
 appraise(fit_sm05,method = 'simulate')
 
-draw(fit_sm05,scales = 'fixed')
+par(mfrow = c(1,3))
+draw(fit_sm05,scale = 'fixed',select = c(1,2,3))
 
 
 plot(fit_sm05, pages = 1, scheme = 1, all.terms = TRUE, seWithMean = TRUE)
@@ -82,6 +84,8 @@ plot(fit_sm05, pages = 1, scheme = 1, all.terms = TRUE, seWithMean = TRUE)
 plot(fit_sm05,select = 1, shade = TRUE, scale = 0, seWithMean = TRUE)
 plot(fit_sm05,select = 2, shade = TRUE, scale = 0, seWithMean = TRUE)
 plot(fit_sm05,select = 3, shade = TRUE, scale = 0, seWithMean = TRUE)
+
+cor(cbind(BodyFat$AGE,BodyFat$WEIGHT,BodyFat$FOREARM,BodyFat$THIGH,BodyFat$ABDOMEN))
 
 # Prediction ---------------------------------------
 new_x = data.frame(data.frame(AGE = 22, WEIGHT = 154,
@@ -95,3 +99,15 @@ upr = fit$fit + 1.96*fit$se.fit
 dwn = fit$fit - 1.96*fit$se.fit
 
 print(data.frame(fit = fit$fit, upr = upr, dwn = dwn))
+
+
+fit_all = predict(fit_sm05, se = TRUE)
+quantile(fit_all$fit, probs = c(0,0.25,.5,.75,1))
+quantile(BodyFat$BODYFAT, probs = c(0,0.25,.5,.75,1))
+
+
+res = BodyFat$BODYFAT - fit_all$fit
+n = length(res)
+length(which(abs(res)>10))/n
+length(which(abs(res)>5))/n
+length(which(abs(res)>3))/n
