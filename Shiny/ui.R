@@ -12,7 +12,7 @@ BodyFat = subset(BodyFat, select = -c(IDNO,DENSITY))
 
 final_model <- mgcv::gam(BODYFAT~ 1 + AGE  + WEIGHT
                          + s(ABDOMEN)
-                         + s(THIGH) 
+                         + s(THIGH)
                          + FOREARM + s(WRIST)
                          ,data = BodyFat, method = 'REML')
 
@@ -47,13 +47,27 @@ ui <- fluidPage(
       
       actionButton(inputId = "predict_button", label = "Calculate your BodyFat"
                    ,class = "btn-success"),
-      textOutput(outputId = "warnings")
+      actionButton(inputId = "clear_button", label = "Clear Output"
+                   ),
+      textOutput(outputId = "warnings"),
+      textOutput(outputId = "warnings2"),
+      tags$head(tags$style("#warnings{color: red;
+                                 font-style: italic;
+                                 }"
+                 )
+                 ),
+      tags$head(tags$style("#warnings2{color: red;
+                                 font-style: italic;
+                                 }"
+      )
+      )
     ),
     
     mainPanel(
       textOutput(outputId = "imputation"),
       textOutput(outputId = "processing"),
-      textOutput(outputId = "prediction")
+      textOutput(outputId = "prediction"),
+      plotOutput(outputId = "fit")
     )
     
   )
@@ -104,20 +118,24 @@ server <- function(input, output){
   
   pred_val <- function(AGE = input$AGE, ABDOMEN = input$ABDOMEN, WEIGHT = input$WEIGHT,
                        WRIST, FOREARM, THIGH){
+    res = list()
+    length(res)<-2
     new_x = data.frame(AGE = as.numeric(AGE), WEIGHT = as.numeric(WEIGHT),
                        ABDOMEN= as.numeric(ABDOMEN), THIGH = as.numeric(THIGH),
                        FOREARM = as.numeric(FOREARM), WRIST = as.numeric(WRIST))
     fit = predict(final_model, newdata = new_x, se = TRUE)
     upr = fit$fit + 2*fit$se.fit
     dwn = fit$fit - 2*fit$se.fit
-    paste("Estimated BodyFat is ",round(fit$fit,2)," with a 95% interval "
+    res[[1]] = paste("Estimated BodyFat is ",round(fit$fit,2)," with a 95% Confidence Interval "
           ,"[",round(dwn,2),",",round(upr,2),"].")
+    res[[2]] = fit$fit
+    return(res)
   }
   
   imputation_input <- reactive({
-    req(input$AGE)
-    req(input$ABDOMEN)
-    req(input$WEIGHT)
+    # req(input$AGE)
+    # req(input$ABDOMEN)
+    # req(input$WEIGHT)
     
     WRIST = input$WRIST
     FOREARM = input$FOREARM
@@ -147,13 +165,56 @@ server <- function(input, output){
     output$processing<- renderText({
       "Calculating.."
     })
+    res_val = pred_val(WRIST = WRIST, THIGH = THIGH, FOREARM = FOREARM)
+    pred_bodyfat = res_val[[2]]
+    if (pred_bodyfat<=1 || pred_bodyfat>=50){
+      output$warnings<- renderText({
+        "Error: Have an abnormal prediction, try another values."
+      })
+      output$processing <- renderText({
+        "Finished!"})
+      return('')
+    }
+    
     output$prediction <- renderText({
-      pred_val(WRIST = WRIST, THIGH = THIGH, FOREARM = FOREARM)
+      res_val[[1]]
     })
     
     output$processing<- renderText({
       "Calculating..."
     })
+    
+    output$fit <- renderPlot({
+      if(pred_bodyfat<6.48){
+        lg_col = 'darkslategray1'
+        lg_text = "Essential"
+      }
+      else if(pred_bodyfat<14.0187){
+        lg_col = 'deepskyblue'
+        lg_text = "Athletes"
+      }
+      else if(pred_bodyfat<18.9960){
+        lg_col = 'green'
+        lg_text = "Fit"
+      }
+      else if(pred_bodyfat<23.4314){
+        lg_col = 'lightcoral'
+        lg_text = "Acceptable"
+      }
+      else if(pred_bodyfat<37.1034){
+        lg_col = 'Red'
+        lg_text = "Obese"
+      }
+      else{
+        lg_col = 'Red4'
+        lg_text = "Over Obese"
+      }
+      
+      barplot(height=pred_bodyfat,horiz = TRUE, axes = FALSE,axisnames=FALSE, xlim = c(0,40),col = lg_col,
+              legend.text = lg_text, ylab = 'BodyFat',names.arg = NULL,
+              args.legend = list(x = "bottomright"))
+      axis(3,c(0,6.4823,14.0187,18.9960,23.4314,37.1034,45.00))
+    }, height = 300)
     
     output$processing <- renderText({
       "Finished!"
@@ -161,19 +222,20 @@ server <- function(input, output){
     
     if (!(imput_text == '')){
       imput_text = paste0("Imputation for ", imput_text)
-      output$warnings <- renderText({
+      output$warnings2 <- renderText({
         "Warnings: The Confidence interval may be underestimated since data was imputed."
       })
       return(paste(imput_text))
     }
     else{
-      output$warnings <- renderText({
+      output$warnings2 <- renderText({
         ""
       })
       return('')
     }
   }
   )
+  
   
   check_input <- reactive({
     output_text = ''
@@ -191,10 +253,84 @@ server <- function(input, output){
       output_text = paste0("Missing Values ", output_text,"are not allowed.")
       return(output_text)
     }
+    
+    
+    # if (is.na(as.numeric(input$Age))){
+    #   output_text = paste0(output_text,"Age ")
+    # }
+    if (is.na(as.numeric(input$ABDOMEN))){
+      output_text = paste0(output_text,"ABDOMEN ")
+    }
+    if (is.na(as.numeric(input$WEIGHT))){
+      output_text = paste0(output_text,"WEIGHT ")
+    }
+    if (is.na(as.numeric(input$WRIST)) && input$WRIST!=''){
+      output_text = paste0(output_text,"WRIST ")
+    }
+    if (is.na(as.numeric(input$FOREARM))&& input$FOREARM!=''){
+      output_text = paste0(output_text,"FOREARM ")
+    }
+    if (is.na(as.numeric(input$THIGH))&&input$THIGH!=''){
+      output_text = paste0(output_text,"THIGH ")
+    }
+    
+    
+    
+    if (output_text != ''){
+      output_text = paste0("Please enter numbers for ", output_text,".")
+      return(output_text)
+    }
+    
+    if (as.numeric(input$AGE) < min(BodyFat$AGE) || as.numeric(input$AGE) > max(BodyFat$AGE)){
+      output_text = paste0(output_text, "AGE ")
+    }
+    
+    if (as.numeric(input$ABDOMEN) < 0.9*min(BodyFat$ABDOMEN) || as.numeric(input$ABDOMEN) > 1.1*max(BodyFat$ABDOMEN)){
+      output_text = paste0(output_text, "ABDOMEN ")
+    }
+    if (as.numeric(input$WEIGHT) < 0.9*min(BodyFat$WEIGHT) || as.numeric(input$WEIGHT) > 1.1*max(BodyFat$WEIGHT)){
+      output_text = paste0(output_text, "WEIGHT ")
+    }
+    if (input$WRIST!='' && (as.numeric(input$WRIST) < 0.9*min(BodyFat$WRIST) || as.numeric(input$WRIST) > 1.1*max(BodyFat$WRIST))){
+      output_text = paste0(output_text, "WRIST ")
+    }
+    if (input$FOREARM!='' && (as.numeric(input$FOREARM) < 0.9*min(BodyFat$FOREARM) || as.numeric(input$FOREARM) > 1.1*max(BodyFat$FOREARM))){
+      output_text = paste0(output_text, "FOREARM ")
+    }
+    if (input$THIGH!='' && (as.numeric(input$THIGH) < 0.9*min(BodyFat$THIGH) || as.numeric(input$THIGH) > 1.1*max(BodyFat$THIGH))){
+      output_text = paste0(output_text, "THIGH ")
+    }
+    
+    
+    if (output_text != ''){
+      output_text = paste0("Found extreame input values for ", output_text,", the estimate might be unreliable.")
+      output$warnings <- renderText({
+        output_text
+      })
+      return('')
+    }
+    
     return(output_text)
   })
   
-  clear_all_board <- reactive({
+  click_run <- reactive({
+    res_check = check_input()
+    if (res_check==''){
+      return(imputation_input())
+    }
+    else{
+      output$warnings <- renderText({
+        res_check
+      })
+      return('')
+    }
+    
+  })
+  #quantile      0%      25%      50%      75%     100% 
+  #         6.48342 14.01871 18.99608 23.43139 37.10338 
+  
+  
+  observeEvent(input$clear_button,{
     output$processing <- renderText({
       ""
     })
@@ -204,30 +340,26 @@ server <- function(input, output){
     output$warnings <- renderText({
       ""
     })
+    output$warnings2 <- renderText({
+      ""
+    })
     output$imputation <- renderText({
       ""
     })
-    return(0)
-  })
-  
-  click_run <- eventReactive(input$predict_button,{
-    res_check = check_input()
-    if (res_check==''){
-      return(imputation_input())
-    }
-    else{
-      output$warnings <- renderText({
-        res_check
-      }, col = 'red')
-      return('')
-    }
+    output$fit <- renderPlot({
+      NULL
+    })
     
-  })
-  
+  },ignoreInit = TRUE)
+  observeEvent(input$predict_button,{
+    
     output$imputation <- renderText(
       {
         click_run()}
     )
+  },ignoreInit = TRUE)
+  
+
 
    
 }
