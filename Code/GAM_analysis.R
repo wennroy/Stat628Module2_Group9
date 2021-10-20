@@ -87,6 +87,9 @@ plot(fit_sm05,select = 3, shade = TRUE, scale = 0, seWithMean = TRUE)
 
 cor(cbind(BodyFat$AGE,BodyFat$WEIGHT,BodyFat$FOREARM,BodyFat$THIGH,BodyFat$ABDOMEN))
 
+# concurvity(fit_sm05, full =FALSE)
+# concurvity(fit_sm05, full =TRUE)
+
 ## Check adj R2 degree of freedom 
 gamR2 <- function(gam){
   R2 <- 1-((sum(residuals(gam)^2))/
