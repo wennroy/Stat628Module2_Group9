@@ -42,9 +42,9 @@ MSE_NR8_train = numeric(K) # Nonparametirc model with 8 variables
 MSE_NR8_test = numeric(K) # Nonparametirc model with 8 variables
 MSE_lasso_train = numeric(K) # Lasso
 MSE_lasso_test = numeric(K) # Lasso
-MSE_NRVS_train = numeric(K) # Nonparametirc model with 8 variables but not all variables are significant
+MSE_NRVS_train = numeric(K) # GAM with joint distribution 1 + AGE +WEIGHT + s(ABDOMEN,WRIST,THIGH)
 MSE_NRVS_test = numeric(K)
-MSE_NRVS2_train = numeric(K) # Nonparametirc model with 5 variables. NR6 - FOREARM.
+MSE_NRVS2_train = numeric(K) # GAM with joint distribution 1 + AGE +WEIGHT  + FOREARM + s(ABDOMEN,WRIST,THIGH)
 MSE_NRVS2_test = numeric(K)
 
 library(mgcv)
@@ -126,25 +126,21 @@ for (i in c(1:K)){
   MSE_NR8_test[i] = cal_MSE(BodyFat_test$BODYFAT, pred_y)
   
   
-  # fit_sm_nx_lm <- mgcv::gam(BODYFAT~ 1 + AGE + WEIGHT
-  #                           + s(ABDOMEN)
-  #                           + s(THIGH)
-  #                           + s(WRIST)
-  #                           ,data = BodyFat_train, method = 'REML')
-  # # summary(fit_sm_nx_lm)
-  # pred_y = predict(fit_sm_nx_lm,newdata = BodyFat_test)
-  # MSE_NRVS_train[i] = mean(residuals(fit_sm_nx_lm)^2)
-  # MSE_NRVS_test[i] = cal_MSE(BodyFat_test$BODYFAT, pred_y)
-  # 
-  # fit_sm_nx_lm2 <- mgcv::gam(BODYFAT~ 1 + AGE  + WEIGHT
-  #                            + s(NECK)  + s(ABDOMEN)
-  #                            + s(THIGH) + s(BICEPS)
-  #                            + FOREARM + s(WRIST)
-  #                            ,data = BodyFat_train, method = 'REML')
-  # summary(fit_sm_nx_lm2)
-  # pred_y = predict(fit_sm_nx_lm2,newdata = BodyFat_test)
-  # MSE_NRVS2_train[i] = mean(residuals(fit_sm_nx_lm2)^2)
-  # MSE_NRVS2_test[i] = cal_MSE(BodyFat_test$BODYFAT, pred_y)
+  fit_sm_nx_lm <-  mgcv::gam(BODYFAT~ 1 + AGE +WEIGHT
+                             + s(ABDOMEN,WRIST,THIGH)
+                             ,data = BodyFat, method = 'REML')
+  # summary(fit_sm_nx_lm)
+  pred_y = predict(fit_sm_nx_lm,newdata = BodyFat_test)
+  MSE_NRVS_train[i] = mean(residuals(fit_sm_nx_lm)^2)
+  MSE_NRVS_test[i] = cal_MSE(BodyFat_test$BODYFAT, pred_y)
+
+  fit_sm_nx_lm2 <- mgcv::gam(BODYFAT~ 1 + AGE +WEIGHT  + FOREARM
+                             + s(ABDOMEN,WRIST,THIGH)
+                             ,data = BodyFat, method = 'REML')
+  summary(fit_sm_nx_lm2)
+  pred_y = predict(fit_sm_nx_lm2,newdata = BodyFat_test)
+  MSE_NRVS2_train[i] = mean(residuals(fit_sm_nx_lm2)^2)
+  MSE_NRVS2_test[i] = cal_MSE(BodyFat_test$BODYFAT, pred_y)
 }
 
 
@@ -153,8 +149,8 @@ for (i in c(1:K)){
                      lasso_test = mean(MSE_lasso_test), lasso_train = mean(MSE_lasso_train),
                     NR6_test = mean(MSE_NR6_test), NR6_train = mean(MSE_NR6_train),
                     NR8_test = mean(MSE_NR8_test), NR8_train = mean(MSE_NR8_train)
-                    # NR_VS_test = mean(MSE_NRVS_test), MSE_NRVS_train = mean(MSE_NRVS_train),
-                    # NR_VS2_test = mean(MSE_NRVS2_test), MSE_NRVS2_train = mean(MSE_NRVS2_train)
+                    ,NR_VS_test = mean(MSE_NRVS_test), MSE_NRVS_train = mean(MSE_NRVS_train)
+                    ,NR_VS2_test = mean(MSE_NRVS2_test), MSE_NRVS2_train = mean(MSE_NRVS2_train)
 ))
 print(result)
 
@@ -163,10 +159,8 @@ print(result)
                           lasso_test = sqrt(mean(MSE_lasso_test)), lasso_train = sqrt(mean(MSE_lasso_train)),
                      NR6_test = sqrt(mean(MSE_NR6_test)), NR6_train = sqrt(mean(MSE_NR6_train)),
                      NR8_test = sqrt(mean(MSE_NR8_test)), NR8_train = sqrt(mean(MSE_NR8_train))
-                     # NR_VS_test = sqrt(mean(MSE_NRVS_test)), MSE_NRVS_train = sqrt(mean(MSE_NRVS_train)),
-                     # NR_VS2_test = sqrt(mean(MSE_NRVS2_test)), MSE_NRVS2_train = sqrt(mean(MSE_NRVS2_train))
+                     ,NR_VS_test = sqrt(mean(MSE_NRVS_test)), MSE_NRVS_train = sqrt(mean(MSE_NRVS_train))
+                     ,NR_VS2_test = sqrt(mean(MSE_NRVS2_test)), MSE_NRVS2_train = sqrt(mean(MSE_NRVS2_train))
   ))
 
-
 print(result_rmse)
-

@@ -1,7 +1,9 @@
+rm(list=ls())
 library(shiny)
 library(shinythemes)
 library(mgcv)
 
+setwd("D:/WISC/stat628/Module 2/Stat628Module2_Group9")
 BodyFatData <- read.csv('../BodyFat.csv')
 
 del_index = c(33, 39, 42, 48, 76, 96, 163, 172, 182, 216, 221)
@@ -44,13 +46,13 @@ ui <- fluidPage(
       helpText('* represents not necessary information.'),
       
       actionButton(inputId = "predict_button", label = "Calculate your BodyFat"
-                   ,class = "btn-success")
+                   ,class = "btn-success"),
+      textOutput(outputId = "warnings")
     ),
     
     mainPanel(
       textOutput(outputId = "imputation"),
       textOutput(outputId = "processing"),
-      textOutput(outputId = "warnings"),
       textOutput(outputId = "prediction")
     )
     
@@ -125,41 +127,108 @@ server <- function(input, output){
     
     # print(res_imput)
     imput_text = ''
-    
+    output$processing<- renderText({
+      "Calculating."
+    })
     if((!is.null(res_imput[[1]]))){
       WRIST = res_imput[[1]]
-      imput_text = paste0( imput_text,"WRIST = ", WRIST, ' ')
+      imput_text = paste0( imput_text,"WRIST = ", WRIST, '  ')
     }
 
     if((!is.null(res_imput[[2]]))){
       FOREARM = res_imput[[2]]
-      imput_text = paste0( imput_text,"FOREARM = ", FOREARM, ' ')
+      imput_text = paste0( imput_text,"FOREARM = ", FOREARM, '  ')
     }
     if((!is.null(res_imput[[3]]))){
       THIGH = res_imput[[3]]
-      imput_text = paste0( imput_text,"THIGH = ", THIGH, ' ')
+      imput_text = paste0( imput_text,"THIGH = ", THIGH, '  ')
     }
     # print(imput_text)
+    output$processing<- renderText({
+      "Calculating.."
+    })
     output$prediction <- renderText({
       pred_val(WRIST = WRIST, THIGH = THIGH, FOREARM = FOREARM)
     })
     
+    output$processing<- renderText({
+      "Calculating..."
+    })
+    
+    output$processing <- renderText({
+      "Finished!"
+    })
+    
     if (!(imput_text == '')){
       imput_text = paste0("Imputation for ", imput_text)
+      output$warnings <- renderText({
+        "Warnings: The Confidence interval may be underestimated since data was imputed."
+      })
       return(paste(imput_text))
     }
     else{
+      output$warnings <- renderText({
+        ""
+      })
       return('')
     }
   }
   )
   
-
+  check_input <- reactive({
+    output_text = ''
+    if (input$AGE == ''){
+      output_text = paste0(output_text,"Age ")
+    }
+    if (input$ABDOMEN == ''){
+      output_text = paste0(output_text,"ABDOMEN ")
+    }
+    if (input$WEIGHT == ''){
+      output_text = paste0(output_text,"WEIGHT ")
+    }
+    
+    if (output_text != ''){
+      output_text = paste0("Missing Values ", output_text,"are not allowed.")
+      return(output_text)
+    }
+    return(output_text)
+  })
+  
+  clear_all_board <- reactive({
+    output$processing <- renderText({
+      ""
+    })
+    output$prediction <- renderText({
+      ""
+    })
+    output$warnings <- renderText({
+      ""
+    })
+    output$imputation <- renderText({
+      ""
+    })
+    return(0)
+  })
+  
+  click_run <- eventReactive(input$predict_button,{
+    res_check = check_input()
+    if (res_check==''){
+      return(imputation_input())
+    }
+    else{
+      output$warnings <- renderText({
+        res_check
+      }, col = 'red')
+      return('')
+    }
+    
+  })
   
     output$imputation <- renderText(
-      { req(input$predict_button)
-        imputation_input()}
+      {
+        click_run()}
     )
+
    
 }
 
