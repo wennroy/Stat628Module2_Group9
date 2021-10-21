@@ -1,0 +1,11 @@
+name: shiny
+title:
+username:
+account: wennroy
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 4920476
+bundleId: 5160537
+url: https://wennroy.shinyapps.io/shiny/
+when: 1634775571.1926
+lastSyncTime: 1634775571.1926
