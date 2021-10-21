@@ -362,9 +362,6 @@ server <- function(input, output){
     )
   },ignoreInit = TRUE)
   
-
-
-   
 }
 
 shinyApp(ui = ui, server = server)
