@@ -46,8 +46,19 @@ par(mfrow = c(1,2))
 plot(fit, which = c(1,2))
 #163,221
 
+#Check Linearity of BODYFAT and DENSITY
+library(car)
+fit_den = lm(BodyFatData$BODYFAT~BodyFatData$DENSITY)
+summary(fit_den)
+influence1 <- influencePlot(fit_den, id.method="identify",main="Influence Plot",
+                            sub="Circle size is proportional to Cook's distance")
+plot(fit_den)
+BodyFatData_den = BodyFatData[c(-33,-48,-76,-96,-182,-216),]
+plot(BodyFatData_den$BODYFAT~BodyFatData_den$DENSITY)
+plot(BodyFatData$BODYFAT~BodyFatData$DENSITY)
 
-
-
+fit_den = lm(BodyFatData_den$BODYFAT~BodyFatData_den$DENSITY)
+summary(fit_den)
+#33,48,76,96,182,216
 
 

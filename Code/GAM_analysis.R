@@ -8,7 +8,6 @@ del_index = c(33, 39, 42, 48, 76, 96, 163, 172, 182, 216, 221)
 BodyFat = BodyFatData[-del_index,]
 BodyFat = subset(BodyFat, select = -c(IDNO,DENSITY))
 
-library(mgcv)
 
 # Variable Selection ----------------------------------
 # m0
@@ -21,7 +20,7 @@ fit_sm0 <- mgcv::gam(BODYFAT~ 1 + s(AGE) + s(WEIGHT) + s(HEIGHT) + s(ADIPOSITY)
 summary(fit_sm0)
 
 
-## Select result£ºRemove ADIPOSITY/CHEST/KNEE/ANKLE
+## Select resultï¿½ï¿½Remove ADIPOSITY/CHEST/KNEE/ANKLE
 # m01,1
 fit_sm01 <- mgcv::gam(BODYFAT~ 1 + s(AGE)  + s(WEIGHT) + s(HEIGHT)
                        + s(NECK)  + s(ABDOMEN) + s(HIP)
