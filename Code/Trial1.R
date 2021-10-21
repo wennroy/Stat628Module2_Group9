@@ -126,8 +126,8 @@ for (i in c(1:K)){
   MSE_NR8_test[i] = cal_MSE(BodyFat_test$BODYFAT, pred_y)
   
   
-  fit_sm_nx_lm <-  mgcv::gam(BODYFAT~ 1 + AGE +WEIGHT
-                             + s(ABDOMEN,WRIST,THIGH)
+  fit_sm_nx_lm <-  mgcv::gam(BODYFAT~ 1
+                             + s(ABDOMEN)
                              ,data = BodyFat, method = 'REML')
   # summary(fit_sm_nx_lm)
   pred_y = predict(fit_sm_nx_lm,newdata = BodyFat_test)
