@@ -30,8 +30,10 @@ discussion
 
 
 ## Shiny
+You could directly click on the following link,
+https://wennroy.shinyapps.io/shiny/
 
-Open the following file in `/Code/Shiny/shiny.R`.
+If the above link doesn't work, open the following file in `/Code/Shiny/shiny.R`.
 
 Set the working directory as root directory in the second lines in `shiny.R`, which should look like this,
 
