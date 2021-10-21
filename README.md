@@ -22,10 +22,15 @@ discussion
 
 ## Files
 `Code` has all the codes used in the project.
+
 `Code/Shiny` has all the files for Shiny App.
+
 `Data` includes both original `csv` files and `cleardata.csv`.
+
 `Summary` contains our summary report.
+
 `Presentation` contains the PDF file for our presentation.
+
 `Image` includes the images used in this project.
 
 
